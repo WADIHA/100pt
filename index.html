@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chrono PILE – 1s / 5s / 10s</title>
+<meta name="description" content="Jeu du chronomètre sans tolérance : fais 1.000s, 5.000s et 10.000s pile pour débloquer ton super pouvoir citoyen.">
+<style>
+  :root{--bg:#0e0f12;--panel:#14161b;--muted:#9aa0a6;--text:#e5e7eb;--ok:#22c55e;--primary:#1a73e8}
+  *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  body{margin:0;min-height:100svh;display:grid;place-items:center;background:radial-gradient(1200px 800px at 50% -10%,#141922 0%,#0e0f12 60%);color:var(--text)}
+  .wrap{width:min(640px,94vw);padding:20px}
+  .card{background:var(--panel);border:1px solid #222838;border-radius:22px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  h1{margin:0 0 8px;font-size:22px}
+  p{margin:0 0 12px;color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{flex:1 1 140px;height:48px;border-radius:12px;border:1px solid #2a3142;background:#0f1118;color:#e5e7eb;font-weight:700;cursor:pointer}
+  .btn.sel{border-color:#3b82f6;background:#111827}
+  .btn.primary{background:var(--primary);border-color:transparent}
+  .btn.ok{background:var(--ok);border-color:transparent;color:#0b1017}
+  .board{background:#0f1118;border:1px solid #1f2534;border-radius:16px;padding:14px;margin:12px 0;text-align:center}
+  .big{font-size:42px;font-weight:800;letter-spacing:0.5px}
+  .delta{margin-top:6px}
+  .badge{display:inline-block;border:1px solid #2a3142;border-radius:999px;padding:4px 10px;font-size:12px;color:#cbd5e1}
+  .targets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}
+  .tcard{background:#0f1118;border:1px solid #1f2534;border-radius:14px;padding:10px;text-align:center}
+  .tcard.done{border-color:#22c55e;box-shadow:0 0 0 1px #22c55e inset}
+  .legal{margin-top:10px;color:#8b93a4;font-size:12px}
+  .hidden{display:none}
+  .hint{color:#cbd5e1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- JEU -->
+  <div class="card" id="gameCard">
+    <h1>Chrono PILE</h1>
+    <p>Règle du jeu : **pas de tolérance**. Tu dois arrêter **pile** à <strong>1.000s</strong>, <strong>5.000s</strong> et <strong>10.000s</strong>. À toi les réflexes.</p>
+
+    <!-- Choix du défi -->
+    <div class="row" id="choices">
+      <button class="btn sel" data-target="1000">Défi 1s</button>
+      <button class="btn" data-target="5000">Défi 5s</button>
+      <button class="btn" data-target="10000">Défi 10s</button>
+    </div>
+
+    <!-- Chrono -->
+    <div class="board">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <span class="badge">Objectif : <strong id="goalLabel">1.000s</strong></span>
+        <span class="badge">Pile = <strong>Math.round(ms)</strong></span>
+      </div>
+      <div class="big" id="time">0.000s</div>
+      <div class="delta" id="delta">—</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="startBtn">Lancer</button>
+        <button class="btn" id="stopBtn" disabled>Arrêter</button>
+      </div>
+    </div>
+
+    <!-- Objectifs -->
+    <div class="targets">
+      <div class="tcard" id="goal1"><strong>1 seconde</strong><div id="tick1">À faire</div></div>
+      <div class="tcard" id="goal5"><strong>5 secondes</strong><div id="tick5">À faire</div></div>
+      <div class="tcard" id="goal10"><strong>10 secondes</strong><div id="tick10">À faire</div></div>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="resetBtn">Remise à zéro</button>
+      <button class="btn" id="shareBtn">Partager</button>
+    </div>
+
+    <!-- CTA -->
+    <div id="cta" class="hidden" style="margin-top:14px">
+      <button class="btn ok" id="superBtn">Récupérer ton super pouvoir</button>
+    </div>
+
+    <p class="legal">Progression stockée en local (pas de compte, pas de pub).</p>
+  </div>
+
+  <!-- PAGE FINALE -->
+  <div class="card hidden" id="finalCard">
+    <h2>Ton super pouvoir, c’est ta voix</h2>
+    <p class="hint">Tu viens de réussir un challenge “pile ou rien”. Sérieux, respect. Dans la vraie vie, ta précision peut peser tout autant : s’inscrire sur les listes électorales, c’est activer un pouvoir qui te suit partout.</p>
+    <ul class="hint" style="margin:10px 0 0 18px">
+      <li><strong>Tu comptes</strong> : sans ton inscription, ta voix n’existe pas dans les décisions.</li>
+      <li><strong>Tu impactes ton quotidien</strong> : transports, sport, loyers, culture… c’est concret.</li>
+      <li><strong>Tu changes la donne</strong> : plus on s’inscrit, plus la ville ressemble à ceux qui y vivent.</li>
+    </ul>
+    <p class="hint" style="margin-top:10px">Active-le maintenant :</p>
+    <div class="row" style="margin-top:8px">
+      <a class="btn ok" href="https://www.service-public.fr/particuliers/vosdroits/R16396" target="_blank" rel="noopener">S’inscrire sur les listes électorales</a>
+      <button class="btn" id="giftBtn">Cadeau à récupérer</button>
+    </div>
+    <p id="giftHint" class="hidden hint" style="margin-top:10px">
+      🎁 Passe au <strong>49 rue Mongolfier</strong> — <strong>mercredi</strong> ou <strong>samedi matin</strong> avec l’écran “Chrono PILE réussi”.
+    </p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="replayBtn">Rejouer</button>
+      <button class="btn" id="shareBtn2">Partager</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const fmt = ms => (ms/1000).toFixed(3)+'s';
+
+let goals = JSON.parse(localStorage.getItem('pile_goals')||'{"g1":false,"g5":false,"g10":false}');
+let target = 1000; // 1s par défaut
+let startTime=null, running=false, raf=null;
+
+const timeEl = $('#time'), deltaEl=$('#delta'), goalLabel=$('#goalLabel');
+const startBtn=$('#startBtn'), stopBtn=$('#stopBtn');
+const cta=$('#cta'), superBtn=$('#superBtn');
+const gameCard=$('#gameCard'), finalCard=$('#finalCard');
+const giftBtn=$('#giftBtn'), giftHint=$('#giftHint');
+const replayBtn=$('#replayBtn');
+
+function renderGoals(){
+  $('#goal1').classList.toggle('done',goals.g1); $('#tick1').textContent=goals.g1?'Réussi':'À faire';
+  $('#goal5').classList.toggle('done',goals.g5); $('#tick5').textContent=goals.g5?'Réussi':'À faire';
+  $('#goal10').classList.toggle('done',goals.g10); $('#tick10').textContent=goals.g10?'Réussi':'À faire';
+  if(goals.g1 && goals.g5 && goals.g10) cta.classList.remove('hidden');
+}
+function tick(){
+  if(!running) return;
+  const now=performance.now(), elapsed=now-startTime;
+  timeEl.textContent=fmt(elapsed);
+  raf=requestAnimationFrame(tick);
+}
+function resetRun(display=true){
+  running=false; cancelAnimationFrame(raf); raf=null; startTime=null;
+  stopBtn.disabled=true; startBtn.disabled=false;
+  if(display){ timeEl.textContent='0.000s'; deltaEl.textContent='—'; }
+}
+
+$$('#choices .btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('#choices .btn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+    target=parseInt(btn.dataset.target,10);
+    goalLabel.textContent = (target/1000).toFixed(3)+'s';
+    resetRun();
+  });
+});
+
+startBtn.addEventListener('click', ()=>{
+  resetRun(false);
+  running=true; startTime=performance.now();
+  stopBtn.disabled=false; startBtn.disabled=true;
+  tick();
+});
+
+stopBtn.addEventListener('click', ()=>{
+  if(!running) return;
+  running=false; cancelAnimationFrame(raf);
+  const elapsed=performance.now()-startTime;
+  const rounded = Math.round(elapsed); // pile au milliseconde près
+  const sign = elapsed>=target ? '+' : '−';
+  const diff = Math.abs(elapsed-target);
+  deltaEl.innerHTML = `Résultat: <strong>${fmt(elapsed)}</strong> &nbsp; (${sign}${fmt(diff)} vs objectif)`;
+  if(rounded===target){
+    if(target===1000) goals.g1=true;
+    if(target===5000) goals.g5=true;
+    if(target===10000) goals.g10=true;
+    localStorage.setItem('pile_goals', JSON.stringify(goals));
+    renderGoals();
+    navigator.vibrate?.(20);
+  }
+  stopBtn.disabled=true; startBtn.disabled=false;
+});
+
+$('#resetBtn').addEventListener('click', ()=>{
+  if(confirm('Remettre la progression à zéro ?')){
+    goals={g1:false,g5:false,g10:false};
+    localStorage.setItem('pile_goals', JSON.stringify(goals));
+    cta.classList.add('hidden'); renderGoals(); resetRun();
+  }
+});
+
+function share(){
+  const url=location.href;
+  const text="Chrono PILE : fais 1.000s, 5.000s, 10.000s pile et débloque ton super pouvoir citoyen.";
+  if(navigator.share){ navigator.share({title:document.title,text,url}).catch(()=>{}); }
+  else{ prompt('Copie ce lien :', url); }
+}
+$('#shareBtn').addEventListener('click', share);
+$('#shareBtn2')?.addEventListener('click', share);
+
+superBtn.addEventListener('click', ()=>{
+  gameCard.classList.add('hidden');
+  finalCard.classList.remove('hidden');
+});
+giftBtn.addEventListener('click', ()=> giftHint.classList.toggle('hidden'));
+replayBtn.addEventListener('click', ()=>{
+  finalCard.classList.add('hidden');
+  gameCard.classList.remove('hidden');
+});
+
+renderGoals(); resetRun();
+</script>
+</body>
+</html>
