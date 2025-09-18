@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>100 Points = Ton Pouvoir</title>
+  <style>
+    :root{--bg:#0e0f12;--fg:#ffffff;--muted:#9aa0a6;--accent:#4caf50;}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    body{margin:0;min-height:100svh;background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center}
+    .app{width:min(520px,92vw);padding:24px}
+    .card{background:#14161b;border:1px solid #262a33;border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h1{margin:0 0 8px;font-size:22px}
+    p{margin:0 0 16px;color:var(--muted);line-height:1.4}
+    .progress-wrap{margin:14px 0 18px;background:#0b0c0f;border:1px solid #1f232d;border-radius:999px;height:16px;overflow:hidden}
+    .progress{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#86efac)}
+    .count{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:#c9d1d9;margin-bottom:14px}
+    .tap{width:100%;height:64px;border:0;border-radius:16px;background:#1a73e8;color:#fff;font-weight:700;font-size:18px;cursor:pointer}
+    .tap:active{transform:translateY(1px)}
+    .row{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+    .btn{flex:1 1 180px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border:1px solid #2a2f3a;border-radius:14px;background:#0f1116;color:#e5e7eb;text-decoration:none;font-weight:600}
+    .btn.primary{background:var(--accent);border-color:transparent;color:#0c1117}
+    .hint{margin-top:12px;color:#a1a7b3;font-size:14px}
+    .badge{display:inline-block;background:#22262f;border:1px solid #2f3542;padding:4px 10px;border-radius:999px;font-size:12px;color:#cbd5e1;margin-left:6px}
+    .dim{opacity:.7}
+    .legal{margin-top:18px;font-size:12px;color:#8b93a4}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <h1>100 points = ton pouvoir<span class="badge">+1 par tap</span></h1>
+      <p class="dim">Joue une minute. À 100, tu débloques ton **vrai** super-pouvoir : t’inscrire et peser pour de bon.</p>
+
+      <div class="count">
+        <span>Progression</span>
+        <strong><span id="score">0</span>/100</strong>
+      </div>
+      <div class="progress-wrap"><div id="bar" class="progress"></div></div>
+
+      <button id="tap" class="tap">TOUCHE POUR GAGNER +1</button>
+
+      <div id="cta" style="display:none">
+        <div class="row" style="margin-top:16px">
+          <a class="btn primary" id="voteLink" href="https://www.service-public.fr/particuliers/vosdroits/R16396" target="_blank" rel="noopener">
+            S’inscrire sur les listes électorales
+          </a>
+          <button class="btn" id="giftBtn">Cadeau à récupérer</button>
+        </div>
+        <p class="hint" id="giftHint" style="display:none">
+          Cadeau disponible au <strong>49 rue Mongolfier</strong> — <strong>mercredi matin</strong> ou <strong>samedi matin</strong>.  
+          Montre simplement l’écran “100/100”.
+        </p>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="resetBtn" title="Remettre à zéro si besoin">Remettre à zéro</button>
+        <button class="btn" id="shareBtn">Partager le jeu</button>
+      </div>
+
+      <p class="legal">Données locales seulement (progression stockée sur ton appareil). Pas de compte, pas de pub.</p>
+    </div>
+  </div>
+
+  <script>
+    const MAX = 100;
+    const tap = document.getElementById('tap');
+    const scoreEl = document.getElementById('score');
+    const bar = document.getElementById('bar');
+    const cta = document.getElementById('cta');
+    const giftBtn = document.getElementById('giftBtn');
+    const giftHint = document.getElementById('giftHint');
+    const resetBtn = document.getElementById('resetBtn');
+    const shareBtn = document.getElementById('shareBtn');
+
+    let score = parseInt(localStorage.getItem('score_100power') || '0', 10);
+    let lastTap = 0;
+
+    function render(){
+      scoreEl.textContent = score;
+      const pct = Math.min(100, (score / MAX) * 100);
+      bar.style.width = pct + '%';
+      if(score >= MAX){
+        tap.disabled = true;
+        tap.textContent = 'Objectif atteint';
+        cta.style.display = 'block';
+      }
+    }
+
+    function bump(){
+      const now = Date.now();
+      if(now - lastTap < 300) return; // anti-spam
+      lastTap = now;
+      if(score < MAX){
+        score++;
+        localStorage.setItem('score_100power', String(score));
+        render();
+      }
+    }
+
+    tap.addEventListener('click', bump);
+
+    giftBtn.addEventListener('click', ()=> {
+      giftHint.style.display = giftHint.style.display === 'none' ? 'block' : 'none';
+    });
+
+    resetBtn.addEventListener('click', ()=> {
+      if(confirm('Remettre la progression à zéro ?')){
+        score = 0;
+        localStorage.setItem('score_100power','0');
+        tap.disabled = false;
+        tap.textContent = 'TOUCHE POUR GAGNER +1';
+        cta.style.display = 'none';
+        giftHint.style.display = 'none';
+        render();
+      }
+    });
+
+    shareBtn.addEventListener('click', async ()=> {
+      const url = location.href;
+      const text = '100 points = ton pouvoir. Tape et débloque ton lien d’inscription électorale.';
+      if(navigator.share){
+        try{ await navigator.share({title:document.title, text, url}); }catch{}
+      } else {
+        prompt('Copie ce lien et partage-le :', url);
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
